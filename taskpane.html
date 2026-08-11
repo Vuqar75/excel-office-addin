@@ -1,69 +1,18 @@
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Excel Actions</title>
-  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-  <link rel="stylesheet" href="./taskpane.css">
-</head>
-<body>
-<main>
-  <header><span class="eyebrow">EXCEL TOOLKIT</span><h1>Помощник по данным</h1><p>Анализ, очистка, сверка и отчёты.</p></header>
-  <nav class="tabs" aria-label="Модули">
-    <button class="tab active" data-panel="analysis">Анализ</button>
-    <button class="tab" data-panel="cleaning">Очистка</button>
-    <button class="tab" data-panel="duplicates">Дубликаты</button>
-    <button class="tab" data-panel="compare">Сверка</button>
-    <button class="tab" data-panel="report">Отчёт</button>
-  </nav>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Excel Data Assistant</title><script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script><link rel="stylesheet" href="./taskpane.css?v=2.0.0"></head><body>
+<main><header><div><span class="eyebrow">EXCEL DATA ASSISTANT 2.0</span><h1 data-i18n="title">Помощник по данным</h1></div><select id="language" aria-label="Language"><option value="ru">RU</option><option value="az">AZ</option><option value="en">EN</option></select></header>
+<p class="lead" data-i18n="subtitle">Анализ, очистка, сверка и отчёты.</p>
+<div id="progress" class="progress hidden"><div id="progress-bar"></div><span id="progress-text">0%</span></div>
+<nav class="tabs"><button class="tab active" data-panel="analysis" data-i18n="analysis">Анализ</button><button class="tab" data-panel="cleaning" data-i18n="cleaning">Очистка</button><button class="tab" data-panel="duplicates" data-i18n="duplicates">Дубликаты</button><button class="tab" data-panel="compare" data-i18n="compare">Сверка</button><button class="tab" data-panel="report" data-i18n="report">Отчёт</button><button class="tab" data-panel="history" data-i18n="history">Журнал</button></nav>
 
-  <section id="panel-analysis" class="panel active">
-    <h2>Анализ выделения</h2><p>Статистика без изменения книги.</p>
-    <button id="analyze-selection" class="primary">Анализировать</button>
-    <div id="analysis-results" class="hidden">
-      <div class="range-summary"><strong id="analysis-address">—</strong><span id="analysis-size">—</span></div>
-      <div class="metrics">
-        <article><span>Сумма</span><strong id="metric-sum">—</strong></article><article><span>Среднее</span><strong id="metric-average">—</strong></article>
-        <article><span>Медиана</span><strong id="metric-median">—</strong></article><article><span>Минимум</span><strong id="metric-min">—</strong></article>
-        <article><span>Максимум</span><strong id="metric-max">—</strong></article><article><span>Числа</span><strong id="metric-numbers">0</strong></article>
-        <article><span>Заполнено</span><strong id="metric-filled">0</strong></article><article><span>Пустые</span><strong id="metric-empty">0</strong></article>
-        <article><span>Уникальные</span><strong id="metric-unique">0</strong></article><article><span>Ошибки</span><strong id="metric-errors">0</strong></article>
-      </div>
-    </div>
-  </section>
+<section id="panel-analysis" class="panel active"><h2 data-i18n="analysisTitle">Анализ выделения</h2><p data-i18n="readOnly">Без изменения книги.</p><button id="analyze-selection" class="primary" data-i18n="runAnalysis">Анализировать</button><div id="analysis-results" class="hidden"><div class="range-summary"><strong id="analysis-address">—</strong><span id="analysis-size">—</span></div><div class="metrics"><article><span data-i18n="sum">Сумма</span><strong id="metric-sum">—</strong></article><article><span data-i18n="average">Среднее</span><strong id="metric-average">—</strong></article><article><span data-i18n="median">Медиана</span><strong id="metric-median">—</strong></article><article><span data-i18n="min">Минимум</span><strong id="metric-min">—</strong></article><article><span data-i18n="max">Максимум</span><strong id="metric-max">—</strong></article><article><span data-i18n="numbers">Числа</span><strong id="metric-numbers">0</strong></article><article><span data-i18n="text">Текст</span><strong id="metric-text">0</strong></article><article><span data-i18n="formulas">Формулы</span><strong id="metric-formulas">0</strong></article><article><span data-i18n="empty">Пустые</span><strong id="metric-empty">0</strong></article><article><span data-i18n="unique">Уникальные</span><strong id="metric-unique">0</strong></article><article><span data-i18n="errors">Ошибки</span><strong id="metric-errors">0</strong></article></div></div></section>
 
-  <section id="panel-cleaning" class="panel">
-    <h2>Очистка данных</h2><p>Создаёт резервный лист, затем очищает выделение.</p>
-    <label><input id="clean-trim" type="checkbox" checked> Удалить лишние пробелы</label>
-    <label><input id="clean-nonprinting" type="checkbox" checked> Удалить непечатаемые символы</label>
-    <label><input id="clean-empty-rows" type="checkbox"> Удалить полностью пустые строки</label>
-    <label>Регистр текста<select id="clean-case"><option value="none">Не менять</option><option value="upper">ВЕРХНИЙ</option><option value="lower">нижний</option><option value="title">Каждое Слово</option></select></label>
-    <button id="preview-cleaning" class="secondary">Предварительный просмотр</button>
-    <button id="apply-cleaning" class="primary">Очистить с резервной копией</button>
-    <div id="clean-preview" class="result-box hidden"></div>
-  </section>
+<section id="panel-cleaning" class="panel"><h2 data-i18n="cleaningTitle">Очистка данных</h2><p data-i18n="backupHint">Перед изменением создаётся резервный лист.</p><label><input id="clean-trim" type="checkbox" checked> <span data-i18n="trim">Лишние пробелы</span></label><label><input id="clean-nonprinting" type="checkbox" checked> <span data-i18n="nonprinting">Непечатаемые символы</span></label><label><input id="clean-empty-rows" type="checkbox"> <span data-i18n="emptyRows">Пустые строки</span></label><label><span data-i18n="case">Регистр</span><select id="clean-case"><option value="none">—</option><option value="upper">ABC</option><option value="lower">abc</option><option value="title">Abc Def</option></select></label><button id="preview-cleaning" class="secondary" data-i18n="preview">Предварительный просмотр</button><button id="apply-cleaning" class="primary" data-i18n="applyBackup">Применить с резервной копией</button><div id="clean-preview" class="result-box hidden"></div></section>
 
-  <section id="panel-duplicates" class="panel">
-    <h2>Дубликаты</h2><p>Сравнение выполняется по всей строке выделенного диапазона.</p>
-    <button id="highlight-duplicates" class="secondary">Подсветить дубликаты</button>
-    <button id="remove-duplicates" class="danger">Удалить с резервной копией</button>
-    <div id="duplicate-result" class="result-box hidden"></div>
-  </section>
+<section id="panel-duplicates" class="panel"><h2 data-i18n="duplicatesTitle">Поиск дубликатов</h2><p data-i18n="selectColumns">Выберите столбцы сравнения.</p><div id="duplicate-columns" class="column-list"></div><button id="preview-duplicates" class="secondary" data-i18n="preview">Предварительный просмотр</button><button id="highlight-duplicates" class="secondary" data-i18n="highlight">Подсветить</button><button id="remove-duplicates" class="danger" data-i18n="removeBackup">Удалить с резервной копией</button><div id="duplicate-result" class="result-box hidden"></div></section>
 
-  <section id="panel-compare" class="panel">
-    <h2>Сверка двух таблиц</h2><p>Первая строка считается заголовком, первый столбец — ключом.</p>
-    <ol><li>Выделите первую таблицу и сохраните.</li><li>Выделите вторую и запустите сверку.</li></ol>
-    <button id="save-first-range" class="secondary">1. Сохранить первую таблицу</button>
-    <button id="compare-second-range" class="primary">2. Сверить со второй</button>
-    <div id="compare-result" class="result-box hidden"></div>
-  </section>
+<section id="panel-compare" class="panel"><h2 data-i18n="compareTitle">Сверка таблиц</h2><label><span data-i18n="keyColumn">Ключевой столбец</span><select id="compare-key"></select></label><label><input id="compare-case-sensitive" type="checkbox"> <span data-i18n="caseSensitive">Учитывать регистр</span></label><p data-i18n="compareSteps">Сохраните первую таблицу, затем выделите вторую.</p><button id="save-first-range" class="secondary" data-i18n="saveFirst">1. Сохранить первую</button><button id="compare-second-range" class="primary" data-i18n="compareSecond">2. Сверить со второй</button><div id="compare-result" class="result-box hidden"></div></section>
 
-  <section id="panel-report" class="panel">
-    <h2>Автоматический отчёт</h2><p>Создаёт новый лист со статистикой числовых столбцов и диаграммой.</p>
-    <button id="create-report" class="primary">Создать отчёт</button>
-    <div id="report-result" class="result-box hidden"></div>
-  </section>
-  <p id="status" role="status">Подключение к Excel…</p>
-</main>
-  <script src="./taskpane.js?v=20260811-2"></script>
-</body></html>
+<section id="panel-report" class="panel"><h2 data-i18n="reportTitle">Автоматический отчёт</h2><label><input id="report-first-row-header" type="checkbox" checked> <span data-i18n="firstRowHeader">Первая строка — заголовки</span></label><label><input id="report-chart" type="checkbox" checked> <span data-i18n="addChart">Добавить диаграмму</span></label><button id="create-report" class="primary" data-i18n="createReport">Создать отчёт</button><div id="report-result" class="result-box hidden"></div></section>
+
+<section id="panel-history" class="panel"><h2 data-i18n="historyTitle">Журнал операций</h2><button id="restore-last" class="danger" data-i18n="restore">Восстановить последнюю копию</button><button id="clear-history" class="secondary" data-i18n="clearHistory">Очистить журнал</button><div id="history-list" class="history-list"></div></section>
+<p id="status" role="status">Подключение к Excel…</p></main><script src="./taskpane.js?v=2.0.0"></script></body></html>
