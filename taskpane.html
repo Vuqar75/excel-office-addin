@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Excel Actions</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="stylesheet" href="./taskpane.css">
+</head>
+<body>
+<main>
+  <header><span class="eyebrow">EXCEL TOOLKIT</span><h1>Помощник по данным</h1><p>Анализ, очистка, сверка и отчёты.</p></header>
+  <nav class="tabs" aria-label="Модули">
+    <button class="tab active" data-panel="analysis">Анализ</button>
+    <button class="tab" data-panel="cleaning">Очистка</button>
+    <button class="tab" data-panel="duplicates">Дубликаты</button>
+    <button class="tab" data-panel="compare">Сверка</button>
+    <button class="tab" data-panel="report">Отчёт</button>
+  </nav>
+
+  <section id="panel-analysis" class="panel active">
+    <h2>Анализ выделения</h2><p>Статистика без изменения книги.</p>
+    <button id="analyze-selection" class="primary">Анализировать</button>
+    <div id="analysis-results" class="hidden">
+      <div class="range-summary"><strong id="analysis-address">—</strong><span id="analysis-size">—</span></div>
+      <div class="metrics">
+        <article><span>Сумма</span><strong id="metric-sum">—</strong></article><article><span>Среднее</span><strong id="metric-average">—</strong></article>
+        <article><span>Медиана</span><strong id="metric-median">—</strong></article><article><span>Минимум</span><strong id="metric-min">—</strong></article>
+        <article><span>Максимум</span><strong id="metric-max">—</strong></article><article><span>Числа</span><strong id="metric-numbers">0</strong></article>
+        <article><span>Заполнено</span><strong id="metric-filled">0</strong></article><article><span>Пустые</span><strong id="metric-empty">0</strong></article>
+        <article><span>Уникальные</span><strong id="metric-unique">0</strong></article><article><span>Ошибки</span><strong id="metric-errors">0</strong></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="panel-cleaning" class="panel">
+    <h2>Очистка данных</h2><p>Создаёт резервный лист, затем очищает выделение.</p>
+    <label><input id="clean-trim" type="checkbox" checked> Удалить лишние пробелы</label>
+    <label><input id="clean-nonprinting" type="checkbox" checked> Удалить непечатаемые символы</label>
+    <label><input id="clean-empty-rows" type="checkbox"> Удалить полностью пустые строки</label>
+    <label>Регистр текста<select id="clean-case"><option value="none">Не менять</option><option value="upper">ВЕРХНИЙ</option><option value="lower">нижний</option><option value="title">Каждое Слово</option></select></label>
+    <button id="preview-cleaning" class="secondary">Предварительный просмотр</button>
+    <button id="apply-cleaning" class="primary">Очистить с резервной копией</button>
+    <div id="clean-preview" class="result-box hidden"></div>
+  </section>
+
+  <section id="panel-duplicates" class="panel">
+    <h2>Дубликаты</h2><p>Сравнение выполняется по всей строке выделенного диапазона.</p>
+    <button id="highlight-duplicates" class="secondary">Подсветить дубликаты</button>
+    <button id="remove-duplicates" class="danger">Удалить с резервной копией</button>
+    <div id="duplicate-result" class="result-box hidden"></div>
+  </section>
+
+  <section id="panel-compare" class="panel">
+    <h2>Сверка двух таблиц</h2><p>Первая строка считается заголовком, первый столбец — ключом.</p>
+    <ol><li>Выделите первую таблицу и сохраните.</li><li>Выделите вторую и запустите сверку.</li></ol>
+    <button id="save-first-range" class="secondary">1. Сохранить первую таблицу</button>
+    <button id="compare-second-range" class="primary">2. Сверить со второй</button>
+    <div id="compare-result" class="result-box hidden"></div>
+  </section>
+
+  <section id="panel-report" class="panel">
+    <h2>Автоматический отчёт</h2><p>Создаёт новый лист со статистикой числовых столбцов и диаграммой.</p>
+    <button id="create-report" class="primary">Создать отчёт</button>
+    <div id="report-result" class="result-box hidden"></div>
+  </section>
+  <p id="status" role="status">Подключение к Excel…</p>
+</main>
+  <script src="./taskpane.js"></script>
+</body></html>
