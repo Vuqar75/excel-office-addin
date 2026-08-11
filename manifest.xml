@@ -3,7 +3,7 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:type="TaskPaneApp">
   <Id>f12ed42f-ad8a-4f0f-ae51-7aaf6b222af4</Id>
-  <Version>1.2.2.0</Version>
+  <Version>2.0.0.0</Version>
   <ProviderName>Vuqar75</ProviderName>
   <DefaultLocale>ru-RU</DefaultLocale>
   <DisplayName DefaultValue="Excel Data Assistant"/>
@@ -14,7 +14,29 @@
   </AppDomains>
   <Hosts><Host Name="Workbook"/></Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://vuqar75.github.io/excel-office-addin/taskpane.html?v=20260811-2"/>
+    <SourceLocation DefaultValue="https://vuqar75.github.io/excel-office-addin/taskpane.html?v=2.0.0"/>
   </DefaultSettings>
   <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+                    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+                    xsi:type="VersionOverridesV1_0">
+    <Requirements><bt:Sets DefaultMinVersion="1.1"><bt:Set Name="ExcelApi"/></bt:Sets></Requirements>
+    <Hosts><Host xsi:type="Workbook"><DesktopFormFactor>
+      <FunctionFile resid="Taskpane.Url"/>
+      <ExtensionPoint xsi:type="PrimaryCommandSurface"><OfficeTab id="TabHome"><Group id="DataAssistant.Group">
+        <Label resid="Group.Label"/>
+        <Control xsi:type="Button" id="DataAssistant.Open">
+          <Label resid="Button.Label"/><Supertip><Title resid="Button.Label"/><Description resid="Button.Description"/></Supertip>
+          <Icon><bt:Image size="16" resid="Icon.16"/><bt:Image size="32" resid="Icon.32"/><bt:Image size="80" resid="Icon.80"/></Icon>
+          <Action xsi:type="ShowTaskpane"><TaskpaneId>Office.AutoShowTaskpaneWithDocument</TaskpaneId><SourceLocation resid="Taskpane.Url"/></Action>
+        </Control>
+      </Group></OfficeTab></ExtensionPoint>
+    </DesktopFormFactor></Host></Hosts>
+    <Resources>
+      <bt:Images><bt:Image id="Icon.16" DefaultValue="https://github.com/Vuqar75.png?size=16"/><bt:Image id="Icon.32" DefaultValue="https://github.com/Vuqar75.png?size=32"/><bt:Image id="Icon.80" DefaultValue="https://github.com/Vuqar75.png?size=80"/></bt:Images>
+      <bt:Urls><bt:Url id="Taskpane.Url" DefaultValue="https://vuqar75.github.io/excel-office-addin/taskpane.html?v=2.0.0"/></bt:Urls>
+      <bt:ShortStrings><bt:String id="Group.Label" DefaultValue="Data Assistant"/><bt:String id="Button.Label" DefaultValue="Открыть помощник"/></bt:ShortStrings>
+      <bt:LongStrings><bt:String id="Button.Description" DefaultValue="Открыть панель анализа, очистки, сверки и отчётов."/></bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
 </OfficeApp>
