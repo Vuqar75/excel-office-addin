@@ -1,5 +1,3 @@
-import "./taskpane.css";
-
 const MAX_CELLS=100000;
 const statusEl=document.getElementById("status");
 const nf=new Intl.NumberFormat(undefined,{maximumFractionDigits:4});
