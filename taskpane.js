@@ -1,6 +1,6 @@
 
 
-const APP_VERSION="2.11.0";
+const APP_VERSION="2.11.1";
 const MAX_CELLS=100000;
 const statusEl=document.getElementById("status");
 const versionLabel=document.querySelector(".eyebrow");if(versionLabel)versionLabel.textContent=`EXCEL DATA ASSISTANT ${APP_VERSION}`;
@@ -132,7 +132,7 @@ const FORMULA_LIBRARY=[
 {id:"tocol",category:"dynamic",name:"Собрать диапазон в один столбец",description:"Преобразует таблицу в один столбец, пропуская пустые ячейки. Требуется Microsoft 365.",keywords:"один столбец собрать таблицу tocol plex",build:c=>`=TOCOL(${c.range},1)`},
 {id:"torow",category:"dynamic",name:"Собрать диапазон в одну строку",description:"Преобразует таблицу в одну строку, пропуская пустые ячейки. Требуется Microsoft 365.",keywords:"одна строка собрать таблицу torow plex",build:c=>`=TOROW(${c.range},1)`},
 {id:"unique_count",category:"dynamic",name:"Количество уникальных",description:"Считает уникальные непустые значения во всём выделении. Требуется Microsoft 365.",keywords:"количество уникальных distinct unique rows plex",build:c=>`=COUNTA(UNIQUE(TOCOL(${c.range},1)))`},
-{id:"duplicates_only",category:"dynamic",name:"Только повторяющиеся значения",description:"Возвращает уникальный список значений, встречающихся более одного раза. Требуется Microsoft 365.",keywords:"дубликаты повторы список только повторяющиеся filter countif plex",build:c=>`=UNIQUE(FILTER(${c.range},COUNTIF(${c.range},${c.range})>1))`},
+{id:"duplicates_only",category:"dynamic",name:"Только повторяющиеся значения",description:"Возвращает уникальный список значений, встречающихся более одного раза. Требуется Microsoft 365.",keywords:"дубликат дубликаты повторы список только повторяющиеся filter countif plex",build:c=>`=UNIQUE(FILTER(${c.range},COUNTIF(${c.range},${c.range})>1))`},
 {id:"isblank",category:"errors",name:"Проверка пустой ячейки",description:"Возвращает Да, если первая ячейка пуста.",keywords:"пустая ячейка проверка isblank plex",build:c=>`=IF(ISBLANK(${c.first}),"Да","Нет")`},
 {id:"isnumber",category:"errors",name:"Проверка числа",description:"Проверяет, является ли значение числом.",keywords:"число тип проверка isnumber plex",build:c=>`=IF(ISNUMBER(${c.first}),"Число","Не число")`},
 {id:"safe_divide",category:"errors",name:"Безопасное деление",description:"Делит первую ячейку на последнюю и возвращает пустое значение при ошибке.",keywords:"деление ноль ошибка iferror plex",build:c=>`=IFERROR(${c.first}/${c.last},"")`},
