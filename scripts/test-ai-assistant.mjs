@@ -12,6 +12,9 @@ for (const id of ["ai-cell-prompt", "ai-read-context", "ai-generate-preview", "a
 for (const marker of ["requestAiFormula", "loadAiMarkerFromSelection", "replaceAiMarkers", "processSelectedAiMarker", "processAllAiMarkers", "backupFormulaSheet", "formulaRangeContainsCell", "formulaReferencesCell", "recordAiUsage"]) {
   if (!source.includes(marker)) failures.push(`Missing AI workflow marker: ${marker}`);
 }
+for (const marker of ["formula-keep-backup", "ai-cell-keep-backup", "discardSuccessfulFormulaBackup", "insertLibraryFormulaWithMandatoryBackup"]) {
+  if (!source.includes(marker)) failures.push(`Missing optional backup marker: ${marker}`);
+}
 if (!source.includes('/^AI\\s*:\\s*(.+)$/is')) failures.push("AI cell-marker parser is missing");
 if (!source.includes('markers.length>20')) failures.push("Batch AI request limit is missing");
 if (!source.includes('"ai-process-marker":"заменить выбранный AI-промт')) failures.push("Selected marker safety confirmation is missing");
