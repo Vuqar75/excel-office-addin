@@ -8,7 +8,7 @@ Current validated release candidate: web add-in `3.3.0`, desktop companion `0.9.
 
 Current validated release candidate: web add-in `3.4.0`, desktop companion `0.9.0`. Version 3.4 turns the AI tab into the free-form formula assistant, keeps the formula library deterministic, and adds safe `AI:` worksheet markers with preview, source/target checks, populated backups, journaling, usage accounting, and a 20-request batch cap. Ten regression suites cover the release.
 
-Current validated release candidate: web add-in `3.4.1`, desktop companion `0.9.0`. Formula insertion buttons now read «Вставить». A separate unchecked option keeps the populated safety backup after success; otherwise the mandatory temporary backup is removed after a successful insertion and retained if insertion or cleanup fails.
+Current validated release candidate: web add-in `3.4.1`, desktop companion `0.9.0`. Formula insertion buttons now read «Вставить». A separate unchecked option keeps the populated safety backup after success; otherwise the mandatory temporary backup is removed after a successful insertion and retained if insertion or cleanup fails.\n\nCurrent validated release candidate: web add-in `3.4.2`, desktop companion `0.9.0`. Formula insertion now detects a date/time-formatted empty target receiving an ordinary numeric result, switches only that mismatch to General, auto-fits the target column, and reports the target address and applied format.
 
 The security and reliability hardening is documented in `RELEASE_NOTES_3.1.md`. Static checks, seven regression suites, the companion build, local bridge protocol checks, GitHub Pages deployment, browser execution, console and computed styles passed on 2026-08-13.
 
