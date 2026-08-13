@@ -2,6 +2,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const source = fs.readFileSync(new URL("../data-source.js", import.meta.url), "utf8");
+const taskpane = fs.readFileSync(new URL("../src/taskpane.js", import.meta.url), "utf8");
 new vm.Script(source);
 
 const requiredActions = [
@@ -23,5 +24,6 @@ if (missing.length || unsafeTargets.length || missingParameters.length) {
 for (const marker of ["getCurrentRegion()", "getUsedRangeOrNullObject(true)", "MAX_CELLS", "window.addEventListener(\"click\""]) {
   if (!source.includes(marker)) throw new Error(`Missing resolver marker: ${marker}`);
 }
+if (!taskpane.includes("const MAX_CELLS=1000000;")) throw new Error("The one-million-cell limit is not active.");
 console.log(`PASS: ${requiredActions.length} source actions; ${explicitTargets.length} protected targets; ${parameterSources.length} workbook parameters`);
 export const report = { sourceActions: requiredActions.length, protectedTargets: explicitTargets.length, workbookParameters: parameterSources.length };
