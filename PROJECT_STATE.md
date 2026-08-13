@@ -4,6 +4,8 @@ Last verified stable state: web add-in `3.1.0`, desktop companion `0.8.0`.
 
 Current validated release candidate: web add-in `3.2.0`, desktop companion `0.9.0`. It adds hidden range-backed dropdown lists, hidden backup metadata history, stricter formula validation, a persistent STA bridge dispatcher, owned file dialogs, request limits and non-exportable keys for newly created bridge certificates. Publication files must be rebuilt with `scripts/build-publication.mjs` before release.
 
+Current validated release candidate: web add-in `3.3.0`, desktop companion `0.9.0`. Version 3.3 adds a unified data-source policy. Data-processing actions resolve multi-cell selection, current region, or used range; target-writing actions remain explicit. Workbook cells and ranges can supply six formerly manual parameters. Nine regression suites and fifteen release checks pass locally.
+
 The security and reliability hardening is documented in `RELEASE_NOTES_3.1.md`. Static checks, seven regression suites, the companion build, local bridge protocol checks, GitHub Pages deployment, browser execution, console and computed styles passed on 2026-08-13.
 
 ## Stable 3.0.0
