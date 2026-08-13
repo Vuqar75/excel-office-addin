@@ -23,6 +23,7 @@ const appScriptCount = (html.match(/<script[^>]+src="\.\/taskpane\.js\?v=[^"]+"[
 const hasExternalCss = /<link[^>]+rel="stylesheet"/.test(html);
 const hasInlineCss = /<style>[\s\S]*<\/style>/.test(html);
 const browserJavascript = javascript.replace(/^\s*import\s+["']\.\/taskpane\.css["'];\s*/, "");
+const compatibilityScriptCount = (html.match(/protocol-compat\.js\?v=3\.2\.3/g) || []).length;
 
 const checks = [];
 const check = (condition, message) => checks.push({ condition: Boolean(condition), message });
@@ -34,6 +35,7 @@ check(manifestTaskpaneVersions.length === 2 && manifestTaskpaneVersions.every(ve
 check(htmlScriptVersions.length === 1 && htmlScriptVersions[0] === appVersion, "HTML contains exactly one versioned taskpane.js reference");
 check(officeScriptCount === 1, "HTML contains exactly one Office.js reference");
 check(appScriptCount === 1, "HTML contains exactly one taskpane.js script element");
+check(compatibilityScriptCount === 1, "HTML contains exactly one current protocol compatibility script");
 check(!/^\s*import\s+["']\.\/taskpane\.css["'];/m.test(browserJavascript), "published browser JavaScript has no CSS import");
 check(hasInlineCss || hasExternalCss, "HTML includes styling");
 check(css.includes("#217346") && css.includes("border-radius"), "source CSS contains the primary visual rules");
