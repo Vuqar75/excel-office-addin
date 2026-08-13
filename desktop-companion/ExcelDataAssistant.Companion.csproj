@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>ExcelDataAssistant.Companion</AssemblyName>
     <RootNamespace>ExcelDataAssistant.Companion</RootNamespace>
-    <Version>0.8.0</Version>
+    <Version>0.9.0</Version>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <DefaultItemExcludes>$(DefaultItemExcludes);dist\**;release\**</DefaultItemExcludes>
   </PropertyGroup>
