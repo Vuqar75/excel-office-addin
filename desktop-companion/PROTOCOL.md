@@ -21,9 +21,8 @@ Base URL: `https://127.0.0.1:47831/v1`.
 {
   "command": "allow-listed-command",
   "source": "office-addin",
-  "version": "3.1.0"
+  "version": "3.2.0"
 }
 ```
 
 AI formula requests may additionally contain task text, range address and dimensions, explicit header metadata, headers, and the current formula. Cell values are not accepted or transmitted.
-
