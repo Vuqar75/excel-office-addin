@@ -204,6 +204,7 @@ show("formula-ai-result",(budgetCheck.message?budgetCheck.message+"\n\n":"")+(li
 try{const result=await companionRequest("commands",{method:"POST",body:JSON.stringify({command:"ai-formula",source:"office-addin",version:APP_VERSION,ai:{task,address:context.address,rows:context.rows,columns:context.columns,headers:context.headers,hasHeaders:context.hasHeaders,currentFormula:aiBaseFormula}}),timeoutMs:90000});if(!result.ok){show("formula-ai-result",result.message||"AI не вернул формулу.");return;}document.getElementById("formula-preview").value=result.formula;document.getElementById("formula-confirm").checked=false;const usageText=recordAiUsage(result.usage);
 show("formula-ai-result",`AI предложил формулу (${result.model||"OpenAI"}):\n${result.formula}\n\n${result.explanation||""}${budgetCheck.message?`\nПредупреждение бюджета: ${budgetCheck.message}`:""}${result.warnings?`\nПредупреждение: ${result.warnings}`:""}${usageText?`\n\n${usageText}`:""}\n\nПроверьте формулу перед вставкой.`);
 addHistory("Формулы + AI: генерация",true,`${task}${usageText?`\n${usageText.split("\n")[0]}`:""}`);}catch(error){show("formula-ai-result",`AI-запрос не выполнен: ${error.message}`);}finally{desktopBusy=false;toggle(false);renderEnvironment();}}
+
 let aiMarkerContext=null;
 function aiMarkerPrompt(value){const match=String(value??"").trim().match(/^AI\s*:\s*(.+)$/is);return match?match[1].trim():"";}
 function excelColumnName(number){let n=number,result="";while(n>0){n--;result=String.fromCharCode(65+n%26)+result;n=Math.floor(n/26);}return result;}
