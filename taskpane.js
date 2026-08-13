@@ -1,5 +1,6 @@
 const APP_VERSION="3.4.0";
 const MAX_CELLS=1000000;
+Office.onReady(info=>{if(info.host!==Office.HostType.Excel)return;bind("ai-read-context",readAiCellContext);bind("ai-generate-preview",generateAiCellPreview);bind("ai-insert-formula",insertAiCellFormula);bind("ai-explain-selected",explainAiSelectedFormula);bind("ai-load-marker",()=>loadAiMarkerFromSelection(true).catch(error=>show("ai-result",error.message||"Не удалось прочитать AI-промт.")));bind("ai-process-marker",processSelectedAiMarker);bind("ai-process-markers",processAllAiMarkers);});
 const statusEl=document.getElementById("status");
 const versionLabel=document.querySelector(".eyebrow");if(versionLabel)versionLabel.textContent=`EXCEL DATA ASSISTANT ${APP_VERSION}`;
 const nf=new Intl.NumberFormat(undefined,{maximumFractionDigits:4});
