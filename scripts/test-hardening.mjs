@@ -9,12 +9,14 @@ const webMarkers = [
   "Диапазон результата",
   "Целевой диапазон",
   "Введите непустое условие фильтра",
-  "WEBSERVICE|RTD|HYPERLINK",
+  "WEBSERVICE|RTD|HYPERLINK|CALL|REGISTER\\.ID",
   "Файл настроек превышает 1 МБ",
   "unsaved:${documentSessionKey}",
   "setTimeout(()=>URL.revokeObjectURL(a.href),1000)",
   "version:APP_VERSION",
-  "timeoutMs:900000"
+  "timeoutMs:900000",
+  "eda-backup-ledger",
+  "_EDA_Lists"
   ,"findDuplicateKeys(a.slice(1),key,cs)"
   ,"function findDuplicateKeys(rows,k,cs=false)"
 ];
@@ -26,7 +28,10 @@ const companionMarkers = [
   "System.Version.TryParse",
   "FormulaSafety.IsSafe",
   "UniqueFilePath(outputFolder, name, \".csv\")",
-  "finally { Release(sheet); }"
+  "finally { Release(sheet); }",
+  "BlockingCollection<StaWork>",
+  "StatusCodes.Status429TooManyRequests",
+  "X509KeyStorageFlags.UserKeySet)"
 ];
 
 const missing = [
