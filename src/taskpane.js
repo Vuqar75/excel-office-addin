@@ -1,6 +1,6 @@
 import "./taskpane.css";
 
-const APP_VERSION="3.2.0";
+const APP_VERSION="3.3.0";
 const MAX_CELLS=100000;
 const statusEl=document.getElementById("status");
 const versionLabel=document.querySelector(".eyebrow");if(versionLabel)versionLabel.textContent=`EXCEL DATA ASSISTANT ${APP_VERSION}`;
