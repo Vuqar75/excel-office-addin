@@ -10,6 +10,6 @@ Unified workbook data-source release.
 - Formula/date/paste/dropdown target operations remain explicit and are never auto-expanded.
 - Dropdown values and sheet names can be loaded from a workbook range.
 - Conditions, filters, AI formula tasks, and IFERROR replacements can be loaded from an active cell.
-- Auto-resolved sources keep the existing 100,000-cell safety limit.
+- Auto-resolved sources and existing range operations allow up to 1,000,000 cells.
 
 Validation: nine regression suites, a dedicated data-source classification test, protocol compatibility tests, JavaScript syntax checks, and fifteen release checks.
