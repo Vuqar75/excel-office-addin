@@ -15,6 +15,8 @@ const webMarkers = [
   "setTimeout(()=>URL.revokeObjectURL(a.href),1000)",
   "version:APP_VERSION",
   "timeoutMs:900000"
+  ,"findDuplicateKeys(a.slice(1),key,cs)"
+  ,"function findDuplicateKeys(rows,k,cs=false)"
 ];
 const companionMarkers = [
   "const int ProtocolVersion = 2",
