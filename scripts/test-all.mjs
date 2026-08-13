@@ -6,7 +6,8 @@ import { report as tools } from "./test-plex-tools.mjs";
 import { report as helpSettings } from "./test-help-settings.mjs";
 import { report as hardening } from "./test-hardening.mjs";
 import { report as protocolCompatibility } from "./test-protocol-compat.mjs";
-import { report as dataSourcePolicy } from "./test-data-source-policy.mjs";\nimport { report as aiAssistant } from "./test-ai-assistant.mjs";
+import { report as dataSourcePolicy } from "./test-data-source-policy.mjs";
+import { report as aiAssistant } from "./test-ai-assistant.mjs";
 
 const reports = { formulaLibrary, formulaExperience, navigation, safety, tools, helpSettings, hardening, protocolCompatibility, dataSourcePolicy, aiAssistant };
 console.log(`PASS: ${Object.keys(reports).length} regression suites`);
