@@ -9,13 +9,16 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using System.Windows.Forms;
 
 const string Product = "Excel Data Assistant Companion";
-const string Version = "0.8.0";
+const string Version = "0.9.0";
 const int ProtocolVersion = 2;
 const int Port = 47831;
 DateTimeOffset startedAt = DateTimeOffset.UtcNow;
 string[] allowedOrigins = ["https://vuqar75.github.io"];
 string sessionToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 SemaphoreSlim commandGate = new(1, 1);
+object requestRateLock = new();
+DateTimeOffset requestWindow = DateTimeOffset.UtcNow;
+int requestsInWindow = 0;
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 if (args.Length == 2 && args[0] == "--restart-after" && int.TryParse(args[1], out int parentProcessId))
@@ -49,6 +52,27 @@ app.Use(async (context, next) =>
             await context.Response.WriteAsJsonAsync(new { message = "Запрос отклонён локальным мостом." });
             return;
         }
+        if (context.Request.ContentLength is > 131072)
+        {
+            context.Response.StatusCode = StatusCodes.Status413PayloadTooLarge;
+            await context.Response.WriteAsJsonAsync(new { message = "Запрос превышает допустимый размер." });
+            return;
+        }
+        bool rateExceeded;
+        lock (requestRateLock)
+        {
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            if (now - requestWindow >= TimeSpan.FromMinutes(1)) { requestWindow = now; requestsInWindow = 0; }
+            rateExceeded = ++requestsInWindow > 90;
+        }
+        if (rateExceeded)
+        {
+            context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            await context.Response.WriteAsJsonAsync(new { message = "Слишком много локальных запросов. Повторите позже." });
+            return;
+        }
+        context.Response.Headers["Cache-Control"] = "no-store";
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     }
     await next();
 });
@@ -276,17 +300,41 @@ static class CompanionControl
 static class DialogCommands
 {
     private static readonly string[] ExcelExtensions = [".xlsx", ".xlsm", ".xlsb", ".xls"];
+    private sealed record StaWork(Func<object> Action, TaskCompletionSource<object> Completion);
+    private static readonly System.Collections.Concurrent.BlockingCollection<StaWork> StaQueue = new();
+    private static readonly Form DialogOwner;
+
+    static DialogCommands()
+    {
+        TaskCompletionSource<Form> ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Thread dispatcher = new(() =>
+        {
+            using Form owner = new() { ShowInTaskbar = false, Opacity = 0, FormBorderStyle = FormBorderStyle.FixedToolWindow, StartPosition = FormStartPosition.Manual, Location = new System.Drawing.Point(-32000, -32000), Size = new System.Drawing.Size(1, 1), TopMost = true };
+            _ = owner.Handle;
+            ready.SetResult(owner);
+            foreach (StaWork work in StaQueue.GetConsumingEnumerable())
+            {
+                try { work.Completion.SetResult(work.Action()); }
+                catch (Exception error) { work.Completion.SetResult(new { ok = false, message = error.Message }); }
+            }
+        });
+        dispatcher.SetApartmentState(ApartmentState.STA);
+        dispatcher.IsBackground = true;
+        dispatcher.Name = "EDA Excel STA dispatcher";
+        dispatcher.Start();
+        DialogOwner = ready.Task.GetAwaiter().GetResult();
+    }
 
     public static Task<object> CombineWorkbooks() => RunSta(() =>
     {
         using FolderBrowserDialog sourceDialog = new() { Description = "Выберите папку с книгами Excel", UseDescriptionForTitle = true, ShowNewFolderButton = false };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
         string[] files = Directory.EnumerateFiles(sourceDialog.SelectedPath, "*.*", SearchOption.TopDirectoryOnly)
             .Where(path => ExcelExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase))
             .OrderBy(path => path, StringComparer.CurrentCultureIgnoreCase).ToArray();
         if (files.Length == 0) return new { ok = false, message = "В выбранной папке нет книг Excel." };
         using SaveFileDialog saveDialog = new() { Title = "Сохранить объединённую книгу", Filter = "Книга Excel (*.xlsx)|*.xlsx", FileName = "Объединённые книги.xlsx", AddExtension = true, DefaultExt = "xlsx" };
-        if (saveDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
+        if (saveDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
         int sheets = ExcelAutomation.Combine(files, saveDialog.FileName);
         return new { ok = true, message = $"Объединено книг: {files.Length}; листов: {sheets}. Результат: {Path.GetFileName(saveDialog.FileName)}", count = files.Length, sheets };
     });
@@ -294,9 +342,9 @@ static class DialogCommands
     public static Task<object> BatchExportSheets() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу Excel", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb;*.xls", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         using FolderBrowserDialog targetDialog = new() { Description = "Выберите папку для CSV-файлов", UseDescriptionForTitle = true, ShowNewFolderButton = true };
-        if (targetDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
+        if (targetDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
         int count = ExcelAutomation.ExportSheetsToCsv(sourceDialog.FileName, targetDialog.SelectedPath);
         return new { ok = true, message = $"Экспортировано листов в CSV: {count}.", count };
     });
@@ -304,9 +352,9 @@ static class DialogCommands
     public static Task<object> RefreshPowerQueryCopy() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу с запросами Power Query", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         using SaveFileDialog saveDialog = new() { Title = "Сохранить обновлённую копию", Filter = "Книга Excel|*.xlsx;*.xlsm;*.xlsb", FileName = $"{Path.GetFileNameWithoutExtension(sourceDialog.FileName)}_обновлено{Path.GetExtension(sourceDialog.FileName)}", AddExtension = true };
-        if (saveDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
+        if (saveDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
         ExcelAutomation.RefreshCopy(sourceDialog.FileName, saveDialog.FileName);
         return new { ok = true, message = $"Запросы обновлены в копии: {Path.GetFileName(saveDialog.FileName)}" };
     });
@@ -314,10 +362,10 @@ static class DialogCommands
     public static Task<object> ConvertLegacyWorkbooks() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите файлы XLS", Filter = "Книги Excel 97–2003 (*.xls)|*.xls", CheckFileExists = true, Multiselect = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор файлов отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор файлов отменён." };
         string[] files = sourceDialog.FileNames.OrderBy(path => path, StringComparer.CurrentCultureIgnoreCase).ToArray();
         using FolderBrowserDialog targetDialog = new() { Description = "Выберите папку для файлов XLSX", UseDescriptionForTitle = true, ShowNewFolderButton = true };
-        if (targetDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
+        if (targetDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
         int converted = ExcelAutomation.ConvertLegacyWorkbooks(files, targetDialog.SelectedPath);
         return new { ok = true, message = $"Преобразовано файлов XLS в XLSX: {converted}.", count = converted };
     });
@@ -325,12 +373,12 @@ static class DialogCommands
     public static Task<object> CombineCsvFiles() => RunSta(() =>
     {
         using FolderBrowserDialog sourceDialog = new() { Description = "Выберите папку с CSV-файлами", UseDescriptionForTitle = true, ShowNewFolderButton = false };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки отменён." };
         string[] files = Directory.EnumerateFiles(sourceDialog.SelectedPath, "*.csv", SearchOption.TopDirectoryOnly)
             .OrderBy(path => path, StringComparer.CurrentCultureIgnoreCase).ToArray();
         if (files.Length == 0) return new { ok = false, message = "В выбранной папке нет CSV-файлов." };
         using SaveFileDialog saveDialog = new() { Title = "Сохранить объединённую книгу", Filter = "Книга Excel (*.xlsx)|*.xlsx", FileName = "Объединённые CSV.xlsx", AddExtension = true, DefaultExt = "xlsx" };
-        if (saveDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
+        if (saveDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Сохранение отменено." };
         int imported = ExcelAutomation.CombineCsvFiles(files, saveDialog.FileName);
         return new { ok = true, message = $"Объединено CSV-файлов: {imported}. Результат: {Path.GetFileName(saveDialog.FileName)}", count = imported };
     });
@@ -338,9 +386,9 @@ static class DialogCommands
     public static Task<object> SplitWorkbook() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу для разделения", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb;*.xls", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         using FolderBrowserDialog targetDialog = new() { Description = "Выберите папку для отдельных книг", UseDescriptionForTitle = true, ShowNewFolderButton = true };
-        if (targetDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
+        if (targetDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
         int count = ExcelAutomation.SplitWorkbook(sourceDialog.FileName, targetDialog.SelectedPath);
         return new { ok = true, message = $"Создано отдельных книг: {count}.", count };
     });
@@ -348,9 +396,9 @@ static class DialogCommands
     public static Task<object> ExportSheetsToPdf() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу для экспорта PDF", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb;*.xls", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         using FolderBrowserDialog targetDialog = new() { Description = "Выберите папку для PDF-файлов", UseDescriptionForTitle = true, ShowNewFolderButton = true };
-        if (targetDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
+        if (targetDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
         int count = ExcelAutomation.ExportSheetsToPdf(sourceDialog.FileName, targetDialog.SelectedPath);
         return new { ok = true, message = $"Экспортировано листов в PDF: {count}.", count };
     });
@@ -358,10 +406,10 @@ static class DialogCommands
     public static Task<object> InspectLinksAndConnections() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу для проверки ссылок", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb;*.xls", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         WorkbookInspection inspection = ExcelAutomation.InspectLinksAndConnections(sourceDialog.FileName);
         using SaveFileDialog reportDialog = new() { Title = "Сохранить отчёт о ссылках", Filter = "Текстовый отчёт (*.txt)|*.txt", FileName = $"{Path.GetFileNameWithoutExtension(sourceDialog.FileName)}_ссылки.txt", AddExtension = true, DefaultExt = "txt" };
-        if (reportDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Сохранение отчёта отменено." };
+        if (reportDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Сохранение отчёта отменено." };
         List<string> lines = [
             $"Книга: {Path.GetFileName(sourceDialog.FileName)}",
             $"Проверено: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", "",
@@ -377,9 +425,9 @@ static class DialogCommands
     public static Task<object> BackupWorkbook() => RunSta(() =>
     {
         using OpenFileDialog sourceDialog = new() { Title = "Выберите книгу для резервного копирования", Filter = "Книги Excel|*.xlsx;*.xlsm;*.xlsb;*.xls", CheckFileExists = true };
-        if (sourceDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
+        if (sourceDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор книги отменён." };
         using FolderBrowserDialog targetDialog = new() { Description = "Выберите папку для резервной копии", UseDescriptionForTitle = true, ShowNewFolderButton = true };
-        if (targetDialog.ShowDialog() != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
+        if (targetDialog.ShowDialog(DialogOwner) != DialogResult.OK) return new { ok = false, message = "Выбор папки назначения отменён." };
         string backupPath = ExcelAutomation.BackupWorkbook(sourceDialog.FileName, targetDialog.SelectedPath);
         return new { ok = true, message = $"Резервная копия создана: {Path.GetFileName(backupPath)}" };
     });
@@ -387,14 +435,7 @@ static class DialogCommands
     private static Task<object> RunSta(Func<object> action)
     {
         TaskCompletionSource<object> source = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        Thread thread = new(() =>
-        {
-            try { source.SetResult(action()); }
-            catch (Exception error) { source.SetResult(new { ok = false, message = error.Message }); }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.IsBackground = true;
-        thread.Start();
+        StaQueue.Add(new StaWork(action, source));
         return source.Task;
     }
 }
@@ -611,17 +652,26 @@ static class ExcelAutomation
 
     public static void RefreshCopy(string sourcePath, string outputPath)
     {
-        File.Copy(sourcePath, outputPath, true);
+        string finalPath = outputPath;
+        string temporaryPath = Path.Combine(Path.GetDirectoryName(finalPath)!, $".{Path.GetFileName(finalPath)}.{Guid.NewGuid():N}.tmp{Path.GetExtension(finalPath)}");
+        File.Copy(sourcePath, temporaryPath, false);
         dynamic? excel = null, workbook = null;
         try
         {
             excel = CreateExcel();
-            workbook = excel.Workbooks.Open(outputPath, ReadOnly: false, UpdateLinks: 0);
+            workbook = excel.Workbooks.Open(temporaryPath, ReadOnly: false, UpdateLinks: 0);
             workbook.RefreshAll();
             excel.CalculateUntilAsyncQueriesDone();
             workbook.Save();
+            workbook.Close(false); Release(workbook); workbook = null;
+            File.Move(temporaryPath, finalPath, true);
         }
-        finally { if (workbook is not null) { workbook.Close(false); Release(workbook); } Quit(excel); }
+        finally
+        {
+            if (workbook is not null) { workbook.Close(false); Release(workbook); }
+            Quit(excel);
+            try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); } catch { }
+        }
     }
 
     private static dynamic CreateExcel()
@@ -698,7 +748,7 @@ static class ExcelAutomation
 
 static class CertificateManager
 {
-    private const string Subject = "CN=Excel Data Assistant Local Companion";
+    private const string Subject = "CN=Excel Data Assistant Local Companion v2";
 
     public static X509Certificate2 GetOrCreate()
     {
@@ -719,7 +769,7 @@ static class CertificateManager
         san.AddDnsName("localhost");
         request.CertificateExtensions.Add(san.Build());
         X509Certificate2 created = request.CreateSelfSigned(DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now.AddYears(2));
-        created = new X509Certificate2(created.Export(X509ContentType.Pfx), (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet | X509KeyStorageFlags.Exportable);
+        created = new X509Certificate2(created.Export(X509ContentType.Pfx), (string?)null, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet);
         personal.Add(created);
 
         using X509Store roots = new(StoreName.Root, StoreLocation.CurrentUser);
