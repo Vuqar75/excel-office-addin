@@ -1,6 +1,6 @@
 {
   "name": "excel-office-addin",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "private": true,
   "description": "Office.js Excel task-pane add-in with selected-range analysis",
   "scripts": {
