@@ -1,10 +1,11 @@
 {
   "name": "excel-office-addin",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "description": "Office.js Excel task-pane add-in with selected-range analysis",
   "scripts": {
     "build": "webpack --mode production",
+    "build:publication": "node scripts/build-publication.mjs",
     "dev-server": "webpack serve --mode development",
     "start": "office-addin-debugging start manifest.xml desktop",
     "stop": "office-addin-debugging stop manifest.xml",
